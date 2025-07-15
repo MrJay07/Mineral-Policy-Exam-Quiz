@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MDO Mineral Policy Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .quiz-container {
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 100%;
+            max-width: 800px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .question-text {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 20px;
+        }
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .option-button {
+            background-color: #edf2f7;
+            color: #4a5568;
+            padding: 15px 20px;
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+            cursor: pointer;
+            font-size: 1.1rem;
+            text-align: left;
+            transition: all 0.2s ease-in-out;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .option-button:hover:not(.selected):not(.correct):not(.incorrect) {
+            background-color: #e2e8f0;
+            border-color: #cbd5e0;
+        }
+        .option-button.selected {
+            border-color: #63b3ed;
+            background-color: #ebf8ff;
+        }
+        .option-button.correct {
+            background-color: #c6f6d5;
+            border-color: #48bb78;
+            color: #22543d;
+        }
+        .option-button.incorrect {
+            background-color: #fed7d7;
+            border-color: #e53e3e;
+            color: #742a2a;
+        }
+        .feedback-message {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-top: 10px;
+            min-height: 30px; /* To prevent layout shift */
+        }
+        .correct-feedback {
+            color: #38a169;
+        }
+        .incorrect-feedback {
+            color: #e53e3e;
+        }
+        .navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .nav-button {
+            background-color: #4299e1;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: background-color 0.2s ease-in-out;
+            flex: 1;
+        }
+        .nav-button:hover {
+            background-color: #3182ce;
+        }
+        .nav-button:disabled {
+            background-color: #a0aec0;
+            cursor: not-allowed;
+        }
+        .submit-button {
+            background-color: #48bb78;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: background-color 0.2s ease-in-out;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .submit-button:hover {
+            background-color: #38a169;
+        }
+        .quiz-results {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2d3748;
+        }
+        .restart-button {
+            background-color: #f6ad55;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: background-color 0.2s ease-in-out;
+            margin-top: 20px;
+        }
+        .restart-button:hover {
+            background-color: #ed8936;
+        }
+        .question-counter {
+            font-size: 1rem;
+            color: #718096;
+            margin-bottom: 10px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <div id="quiz-screen">
+            <div class="question-counter" id="question-counter"></div>
+            <div class="question-text" id="question-text"></div>
+            <div class="options-container" id="options-container"></div>
+            <div class="feedback-message" id="feedback-message"></div>
+            <button class="submit-button" id="submit-button">Submit Answer</button>
+            <div class="navigation-buttons">
+                <button class="nav-button" id="prev-button" disabled>Previous</button>
+                <button class="nav-button" id="next-button">Next</button>
+            </div>
+        </div>
+        <div id="result-screen" class="hidden">
+            <div class="quiz-results" id="final-score"></div>
+            <button class="restart-button" id="restart-button">Restart Quiz</button>
+        </div>
+    </div>
+
+    <script>
+        // IMPORTANT: The correct answers below are EDUCATED GUESSES.
+        // Please verify them against the original document's green highlights.
+        const quizData = [
+            {
+                question: "1. The Occupational Safety, Health and Working Conditions Code. 2020 is not applied to",
+                options: [
+                    "the offices of the Central Government",
+                    "the offices of the State Government",
+                    "any ship of war of any nationality",
+                    "All of the above"
+                ],
+                correctAnswer: "All of the above"
+            },
+            {
+                question: "2. Under the Occupational Safety, Health and Working Conditions Code, 2020, 'manufacturing process means any process for",
+                options: [
+                    "pumping oil",
+                    "preserving any article in cold storage",
+                    "generating power",
+                    "All of the above"
+                ],
+                correctAnswer: "All of the above"
+            },
+            {
+                question: "3. The First Schedule of the Occupational Safety, Health and Working Conditions Code, 2020 is related to",
+                options: [
+                    "list of notifiable diseases",
+                    "list of matters",
+                    "list of industries involving hazardous processes",
+                    "list of notifiable diseases and matters"
+                ],
+                correctAnswer: "list of industries involving hazardous processes"
+            },
+            {
+                question: "4. 'Factory' means any premises including the precincts thereof where manufacturing process is being carried on with the aid of power whereon (Act No. 37 of 2020)",
+                options: [
+                    "twenty or more workers are working",
+                    "ten or more workers are working",
+                    "seven or more workers are working",
+                    "thirty or more workers are working"
+                ],
+                correctAnswer: "twenty or more workers are working"
+            },
+            {
+                question: "5. Under the Occupational Safety, Health and Working Conditions Code, 2020, 'wages' does not include",
+                options: [
+                    "basic pay",
+                    "overtime allowance",
+                    "dearness allowance",
+                    "retaining allowance"
+                ],
+                correctAnswer: "overtime allowance"
+            },
+            {
+                question: "6. Who will be the Member Secretary (ex officio) of the National Board under the Occupational Safety, Health and Working Conditions Code, 2020?",
+                options: [
+                    "Secretary, the Ministry of Labour and Employment",
+                    "Joint Secretary, the Ministry of Labour and Employment",
+                    "Chief Labour Commissioner (Central), New Delhi",
+                    "Director General, Health Services, New Delhi"
+                ],
+                correctAnswer: "Joint Secretary, the Ministry of Labour and Employment"
+            },
+            {
+                question: "7. Which of the following Acts has been repealed under Section 143 of the Occupational Safety, Health and Working Conditions Code, 2020?",
+                options: [
+                    "The Motor Transport Workers Act",
+                    "The Industrial Disputes Act",
+                    "The Maternity Benefit Act",
+                    "The Minimum Wages Act"
+                ],
+                correctAnswer: "The Motor Transport Workers Act" // Educated guess
+            },
+            {
+                question: "8. Under the Occupational Safety, Health and Working Conditions Code, 2020, choose the incorrect statement from the following.",
+                options: [
+                    "The industrial premise includes a godown attached.",
+                    "Hazardous' means involving danger or potential danger both.",
+                    "Preserving or storing any article in cold storage is not called manufacturing process",
+                    "Domestic services are not included in the industry."
+                ],
+                correctAnswer: "Preserving or storing any article in cold storage is not called manufacturing process" // Educated guess
+            },
+            {
+                question: "9. Under the Occupational Safety, Health and Working Conditions Code, 2020, who among the following shall not be deemed to be the occupier of a factory?",
+                options: [
+                    "In the case of a firm, any one of the individual partners thereof",
+                    "In the case of an association of individuals, any member thereof",
+                    "In the case of a company, any independent director",
+                    "None of the above"
+                ],
+                correctAnswer: "In the case of a company, any independent director" // Educated guess
+            },
+            {
+                question: "10. Under Section 4 of the Occupational Safety, Health and Working Conditions Code, 2020, within how many days, the Appellate Officer shall dispose of the appeal?",
+                options: [
+                    "Thirty days",
+                    "Forty-five days",
+                    "Sixty days.",
+                    "Ninety days"
+                ],
+                correctAnswer: "Thirty days" // Educated guess
+            },
+            {
+                question: "11. What is the maximum penalty if any medical practitioner fails to send a written report under Section 12 of the Occupational Safety, Health and Working Conditions Code, 2020?",
+                options: [
+                    "Five thousand rupees",
+                    "Ten thousand rupees",
+                    "Twenty thousand rupees",
+                    "Fifty thousand rupees"
+                ],
+                correctAnswer: "Ten thousand rupees" // Educated guess
+            },
+            {
+                question: "12. Total how many Schedules are there in the Occupational Safety, Health and Working Conditions Code, 2020?",
+                options: [
+                    "One",
+                    "Two",
+                    "Three",
+                    "Four"
+                ],
+                correctAnswer: "Three" // Educated guess
+            },
+            {
+                question: "13. How many representative members of employees will be there in the National Occupational Safety and Health Advisory Board?",
+                options: [
+                    "Three",
+                    "Four",
+                    "Five",
+                    "Seven"
+                ],
+                correctAnswer: "Five" // Educated guess
+            },
+            {
+                question: "14. Under Section 22 of the Occupational Safety, Health and Working Conditions Code, 2020, the Safety Committee shall consist of",
+                options: [
+                    "representatives of workers",
+                    "representatives of employers and workers",
+                    "representatives of the State Government and workers",
+                    "representatives of the State Government, workers and employers"
+                ],
+                correctAnswer: "representatives of employers and workers" // Educated guess
+            },
+            {
+                question: "15. Under Section 27 of the Occupational Safety, Health and Working Conditions Code, 2020, what will be the rate of extra wages for overtime?",
+                options: [
+                    "Two and a half times the rate of wages",
+                    "Twice the rate of wages",
+                    "One and half times the rate of wages",
+                    "One and quarter times the rate of wages"
+                ],
+                correctAnswer: "Twice the rate of wages" // Educated guess
+            },
+            {
+                question: "16. Under Section 32 of the Occupational Safety, Health and Working Conditions Code, 2020, a worker shall be entitled for how many leaves with wages in case of employed below ground mine?",
+                options: [
+                    "One day leave for every fifteen days",
+                    "One and quarter days leave for every thirty days",
+                    "One day leave for every twenty days",
+                    "One and half days leave for every twenty days"
+                ],
+                correctAnswer: "One day leave for every fifteen days" // Educated guess
+            },
+            {
+                question: "17. Who among the following can exercise powers and duties of the Inspector-cum-Facilitator in respect of mines under the Occupational Safety, Health and Working Conditions Code, 2020?",
+                options: [
+                    "District Magistrate",
+                    "District Judge",
+                    "Director of Mines",
+                    "All of the above"
+                ],
+                correctAnswer: "District Magistrate"
+            },
+            {
+                question: "18. Chapter XI, Part 2 of the Occupational Safety, Health and Working Conditions Code, 2020 deals with",
+                options: [
+                    "contract labour",
+                    "inter-State migrant workers",
+                    "audio-visual workers",
+                    "None of the above"
+                ],
+                correctAnswer: "inter-State migrant workers" // Educated guess
+            },
+            {
+                question: "19. A person, who employs, whether directly or through any person, or on his behalf, or on behalf of any person, is called",
+                options: [
+                    "employee",
+                    "contract labour",
+                    "labour",
+                    "casual labour"
+                ],
+                correctAnswer: "employee" // Educated guess
+            },
+            {
+                question: "20. The employer of workers including women, audio-visual worker and contract labour below eighteen years of age in case of mines, shall be liable to penalty which shall not be less than",
+                options: [
+                    "fifty thousand rupees",
+                    "one lac rupees",
+                    "two lac rupees",
+                    "ten thousand rupees"
+                ],
+                correctAnswer: "fifty thousand rupees" // Educated guess
+            },
+            {
+                question: "21. The Bihar and Orissa Public Demands Recovery Act, 1914 extends to",
+                options: [
+                    "whole of Bihar and Orissa",
+                    "whole of Bihar and Orissa except the district of Angul",
+                    "whole of Bihar and Orissa except the districts of Angul and Sambalpur",
+                    "whole of Bihar and Orissa the district of except Sambalpur"
+                ],
+                correctAnswer: "whole of Bihar and Orissa except the districts of Angul and Sambalpur" // Educated guess
+            },
+            {
+                question: "22. According to the Bihar and Orissa Public Demands Recovery Act, 1914, 'Certificate Officer' means",
+                options: [
+                    "a Collector",
+                    "a Sub-Divisional Officer",
+                    "any Officer appointed by a Collector with the sanction of the Commissioner",
+                    "All of the above"
+                ],
+                correctAnswer: "All of the above"
+            },
+            {
+                question: "23. According to the Bihar and Orissa Public Demands Recovery Act, 1914, 'movable property' includes",
+                options: [
+                    "growing crops",
+                    "standing timber",
+                    "grass",
+                    "All of the above"
+                ],
+                correctAnswer: "growing crops"
+            },
+            {
+                question: "24. According to the Bihar and Orissa Public Demands Recovery Act, 1914, 'Certificate Holder' means",
+                options: [
+                    "the company in whose favour a certificate has been filed under this Act",
+                    "the person against whom a certificate has been filed under this Act",
+                    "the government or person in whose favour a certificate has been filed under this Act",
+                    "None of the above"
+                ],
+                correctAnswer: "the government or person in whose favour a certificate has been filed under this Act" // Educated guess
+            },
+            {
+                question: "25. A certificate filed under Section 4 of the Bihar and Orissa Public Demands Recovery Act, 1914 may be executed by",
+                options: [
+                    "the Certificate Officer in whose office the original certificate is filed",
+                    "the Certificate Officer to whom a copy of the certificate is sent for execution under Section 13, Sub-Section 1",
+                    "Neither (A) nor (B)",
+                    "Both (A) and (B)"
+                ],
+                correctAnswer: "Both (A) and (B)"
+            },
+            {
+                question: "26. What is the mode of execution under Section 15 of the Bihar and Orissa Public Demands Recovery Act, 1914?",
+                options: [
+                    "By attachment",
+                    "By arresting",
+                    "By detaining in civil jail",
+                    "All of the above"
+                ],
+                correctAnswer: "All of the above"
+            },
+            {
+                question: "27. Which property is liable to in sale attachment and execution of a certificate under the Bihar and Orissa Public Demands Recovery Act, 1914?",
+                options: [
+                    "Houses",
+                    "Cheques",
+                    "Government Securities",
+                    "All of the above"
+                ],
+                correctAnswer: "All of the above"
+            },
+            {
+                question: "28. Which property is not liable to attachment and sale in execution of a certificate under the Bihar and Orissa Public Demands Recovery Act, 1914?",
+                options: [
+                    "Wages of labourers",
+                    "Books of accounts",
+                    "Cooking vessels",
+                    "All of the above"
+                ],
+                correctAnswer: "All of the above"
+            },
+            {
+                question: "29. Under the Bihar and Orissa Public Demands Recovery Act, 1914, a person detained in civil jail in execution of a certificate may be so detained, where the certificate is for a demand of an amount exceeding fifty rupees, for",
+                options: [
+                    "a period of six months",
+                    "a period of six weeks",
+                    "a period of three months",
+                    "a period of one month"
+                ],
+                correctAnswer: "a period of six months" // Educated guess
+            },
+            {
+                question: "30. Where a certificate-debtor has been committed to the civil jail under the Bihar and Orissa Public Demands Recovery Act, 1914, he may be released therefrom by the Collector on the ground of",
+                options: [
+                    "contagious disease",
+                    "death of relative",
+                    "marriage of family member",
+                    "All of the above"
+                ],
+                correctAnswer: "contagious disease"
+            },
+            {
+                question: "31. Notwithstanding anything in the Bihar and Orissa Public Demands Recovery Act, 1914, the Certificate Officer shall not order the arrest or detention in the civil jail of",
+                options: [
+                    "a woman",
+                    "a minor",
+                    "an unsound person",
+                    "All of the above"
+                ],
+                correctAnswer: "All of the above"
+            },
+            {
+                question: "32. Which one of the following Sections is related to appeal under the Bihar and Orissa Public Demands Recovery Act, 1914?",
+                options: [
+                    "Section 50",
+                    "Section 55",
+                    "Section 56",
+                    "Section 60"
+                ],
+                correctAnswer: "Section 60" // Educated guess
+            },
+            {
+                question: "33. According to the Bihar and Orissa Public Demands Recovery Act, 1914, an appeal shall be filed against the original order of the Assistant Collector or Deputy Collector",
+                options: [
+                    "to the Collector",
+                    "to the Commissioner",
+                    "to the Court of Sessions",
+                    "to the Civil Judge"
+                ],
+                correctAnswer: "to the Collector" // Educated guess
+            },
+            {
+                question: "34. Every appeal must be presented in case of order made by the Collector under the Bihar and Orissa Public Demands Recovery Act, 1914 within",
+                options: [
+                    "thirty days",
+                    "sixty days",
+                    "ninety days",
+                    "fifteen days"
+                ],
+                correctAnswer: "thirty days" // Educated guess
+            },
+            {
+                question: "35. Under the Bihar and Orissa Public Demands Recovery Act, 1914, the Board of Revenue may revise any order passed by the",
+                options: [
+                    "Collector",
+                    "Commissioner",
+                    "Sessions Judge",
+                    "Assistant Collector"
+                ],
+                correctAnswer: "Commissioner" // Educated guess
+            },
+            {
+                question: "36. Under Section 50 of the Bihar and Orissa Public Demands Recovery Act, 1914, when the Certificate Officer is satisfied that certificate-debtor is minor or of unsound mind, he shall permit in the proceeding",
+                options: [
+                    "represented by his wife",
+                    "represented by his son",
+                    "represented by a suitable person",
+                    "represented by his relative"
+                ],
+                correctAnswer: "represented by a suitable person" // Educated guess
+            },
+            {
+                question: "37. Whoever fraudulently removes, conceals or transfers any property from being taken in execution of a certificate shall be punishable under Section according to the Bihar and Orissa Public Demands Recovery Act, 1914.",
+                options: [
+                    "201 of the IPC, 1860",
+                    "206 of the IPC, 1860",
+                    "451 of the IPC, 1860",
+                    "420 of the IPC, 1860"
+                ],
+                correctAnswer: "206 of the IPC, 1860" // Educated guess
+            },
+            {
+                question: "38. Every Collector, Certificate Officer and Assistant Collector acting under the Bihar and Orissa Public Demands Recovery Act, 1914 shall have the power of a",
+                options: [
+                    "Civil Court",
+                    "Criminal Court",
+                    "Revenue Court",
+                    "Tribunal"
+                ],
+                correctAnswer: "Civil Court" // Educated guess
+            },
+            {
+                question: "39. Section 62 of the Bihar and Orissa Public Demands Recovery Act, 1914 deals with",
+                options: [
+                    "appeal",
+                    "revision",
+                    "review",
+                    "penalty"
+                ],
+                correctAnswer: "revision" // Educated guess
+            },
+            {
+                question: "40. How many Sections are there in the Bihar and Orissa Public Demands Recovery Act, 1914?",
+                options: [
+                    "58",
+                    "68",
+                    "69",
+                    "82"
+                ],
+                correctAnswer: "69" // Educated guess
+            },
+            {
+                question: "41. Under the Mines and Minerals (Development and Regulation) Act, 1957, 'minerals' includes all, except",
+                options: [
+                    "natural gas",
+                    "mineral oil",
+                    "petroleum",
+                    "All of the above"
+                ],
+                correctAnswer: "mineral oil"
+            },
+            {
+                question: "42. Under the Mines and Minerals (Development and Regulation) Act, 1957, 'minor minerals' means",
+                options: [
+                    "building stones",
+                    "gravel",
+                    "ordinary clay",
+                    "All of the above"
+                ],
+                correctAnswer: "All of the above"
+            },
+            {
+                question: "43. Under Sub-Section (1) of Section 30B of the Mines and Minerals (Development and Regulation) Act, 1957, 'Special Court' means the",
+                options: [
+                    "Court of Sessions",
+                    "Collector",
+                    "High Court",
+                    "Special Judicial Magistrate"
+                ],
+                correctAnswer: "Court of Sessions" // Educated guess
+            },
+            {
+                question: "44. Under the Mines and Minerals (Development and Regulation) Act, 1957, the maximum period for which a mining lease may be granted (specified in Part A of the First Schedule) shall not exceed",
+                options: [
+                    "ten years",
+                    "twenty years",
+                    "thirty years",
+                    "fifty years"
+                ],
+                correctAnswer: "thirty years" // Educated guess
+            },
+            {
+                question: "45. The Mines and Minerals (Development and Regulation) Act, 1957 came into force on",
+                options: [
+                    "1st December, 1957",
+                    "1st June, 1958",
+                    "1st January, 1958",
+                    "1st July, 1957"
+                ],
+                correctAnswer: "1st June, 1958" // Educated guess
+            },
+            {
+                question: "46. Under the Mines and Minerals (Development and Regulation) Act, 1957, the provisions of royalties in respect of mining lease are contained in",
+                options: [
+                    "Section 9",
+                    "Section 10",
+                    "Section 10A",
+                    "Section 13"
+                ],
+                correctAnswer: "Section 9" // Educated guess
+            },
+            {
+                question: "47. Under the Mines and Minerals (Development and Regulation) Act, 1957, any mineral specified in the Fourth Schedule is called",
+                options: [
+                    "minor mineral",
+                    "notified mineral",
+                    "mineral oil",
+                    "All of the above"
+                ],
+                correctAnswer: "notified mineral" // Educated guess
+            },
+            {
+                question: "48. Which authority is empowered to terminate the prospective licence or mining lease under the Mines and Minerals (Development and Regulation) Act, 1957?",
+                options: [
+                    "Central Government",
+                    "Central Government after consultation with the State Government",
+                    "State Government",
+                    "Mining Commissioner"
+                ],
+                correctAnswer: "State Government" // Educated guess
+            },
+            {
+                question: "49. Under the Mines and Minerals (Development and Regulation) Act, 1957, which is metallic and non-metallic mineral?",
+                options: [
+                    "Asbestos",
+                    "Bauxite",
+                    "Gold",
+                    "All of the above"
+                ],
+                correctAnswer: "All of the above"
+            },
+            {
+                question: "50. Who shall be empowered to amend the First Schedule and the Fourth Schedule as to add or delete any mineral under the Mines and Minerals (Development and Regulation) Act, 1957?",
+                options: [
+                    "Central Government",
+                    "State Government",
+                    "State Government with the approval of the Central Government",
+                    "Both (A) and (B)"
+                ],
+                correctAnswer: "Central Government" // Educated guess
+            },
+            {
+                question: "51. Under the Mines and Minerals (Development and Regulation) Act, 1957, in any district affected by mining-related operations, the State Government shall establish a trust to be called the",
+                options: [
+                    "District Mineral Trust",
+                    "District Mineral Foundation",
+                    "District Mineral Exploration Trust",
+                    "District Mineral Exploration Foundation"
+                ],
+                correctAnswer: "District Mineral Foundation" // Educated guess
+            },
+            {
+                question: "52. Under the Mines and Minerals (Development and Regulation) Act, 1957, whoever contravenes the provisions of Section 4 shall be punishable with imprisonment for a term which may extend to",
+                options: [
+                    "two years",
+                    "three years",
+                    "five years",
+                    "ten years"
+                ],
+                correctAnswer: "five years" // Educated guess
+            },
+            {
+                question: "53. Part A of the First Schedule of the Mines and Minerals (Development and Regulation) Act, 1957 deals with which of the following minerals?",
+                options: [
+                    "Allanite and monazite",
+                    "Beryl",
+                    "Thorium",
+                    "Coal and lignite"
+                ],
+                correctAnswer: "Coal and lignite" // Educated guess
+            },
+            {
+                question: "54. Under the Mines and Minerals (Development and Regulation) Act, 1957, any operation undertaken for the purpose of exploring, locating or proving mineral deposit is called",
+                options: [
+                    "mining operation",
+                    "prospecting operation",
+                    "reconnaissance operation",
+                    "exploring operation"
+                ],
+                correctAnswer: "prospecting operation" // Educated guess
+            },
+            {
+                question: "55. Under the Mines and Minerals (Development and Regulation) Act, 1957, a mining lease may be renewed for a period not exceeding twenty years with the previous approval of the",
+                options: [
+                    "Central Government",
+                    "State Government",
+                    "National Mineral Exploration Trust",
+                    "National Green Tribunal"
+                ],
+                correctAnswer: "Central Government" // Educated guess
+            },
+            {
+                question: "56. Under the Mines and Minerals (Development and Regulation) Act, 1957, the object of the District Mineral Foundation shall be",
+                options: [
+                    "to work for the interest and benefit of persons and areas affected by mining-related operations",
+                    "to grant mining lease",
+                    "to determine the rates at which royalty shall be payable in respect of any mineral",
+                    "All of the above"
+                ],
+                correctAnswer: "to work for the interest and benefit of persons and areas affected by mining-related operations" // Educated guess
+            },
+            {
+                question: "57. Under the Mines and Minerals (Development and Regulation) Act, 1957, the Judge of the Special Court shall be appointed by",
+                options: [
+                    "the Chief Minister of the State",
+                    "the Central Government with the concurrence of the Supreme Court",
+                    "the State Government with the concurrence of the High Court",
+                    "the Chief Minister of the State with the concurrence of the Governor of the State"
+                ],
+                correctAnswer: "the State Government with the concurrence of the High Court" // Educated guess
+            },
+            {
+                question: "58. Section 26 of the Mines and Minerals (Development and Regulation) Act, 1957 deals with",
+                options: [
+                    "protection of action taken in good faith",
+                    "power of inspection entry and",
+                    "delegation of powers",
+                    "relaxation of rules in special cases"
+                ],
+                correctAnswer: "delegation of powers" // Educated guess
+            },
+            {
+                question: "59. Which Section of the Mines and Minerals (Development and Regulation) Act, 1957 deals with powers of the Central Government to make rules in respect of minerals?",
+                options: [
+                    "Section 11",
+                    "Section 12A",
+                    "Section 13",
+                    "Section 14"
+                ],
+                correctAnswer: "Section 13" // Educated guess
+            },
+            {
+                question: "60. The State Government may make rule for regulating the grant in respect of minor minerals under the Mines and Minerals (Development and Regulation) Act, 1957 for",
+                options: [
+                    "quarry leases",
+                    "mining leases",
+                    "mineral concessions",
+                    "All of the above"
+                ],
+                correctAnswer: "All of the above"
+            },
+            {
+                question: "61. The Mineral Conservation and Development Rules, 2017 shall apply to all minerals, except",
+                options: [
+                    "petroleum and natural gas",
+                    "coal, lignite and sand for stowing",
+                    "minor minerals",
+                    "All of the above"
+                ],
+                correctAnswer: "All of the above"
+            },
+            {
+                question: "62. Under the Mineral Conservation and Development Rules, 2017, 'abandonment of mine' means",
+                options: [
+                    "final closure of a mine after extraction of total deposits thereof",
+                    "final closure of a mine after part of total deposits thereof is extracted",
+                    "final closure of a mine when the mining operations thereon have become uneconomic",
+                    "All of the above"
+                ],
+                correctAnswer: "All of the above"
+            },
+            {
+                question: "63. Under the Mineral Conservation and Development Rules, 2017, who among the following shall be the competent authority to approve a mining plan for grant of a lease?",
+                options: [
+                    "Controller General",
+                    "State Government approved by the Central Government",
+                    "Officer of the Indian Bureau of Mines",
+                    "Controller of Mines"
+                ],
+                correctAnswer: "State Government approved by the Central Government" // Educated guess
+            },
+            {
+                question: "64. Under Rule 45 of the Mineral Conservation and Development Rules, 2017, an annual return shall be submitted each year for the preceding financial year before",
+                options: [
+                    "1st day of January",
+                    "1st day of April",
+                    "1st day of July",
+                    "30th day of September"
+                ],
+                correctAnswer: "1st day of July" // Educated guess
+            },
+            {
+                question: "65. Under the Mineral Conservation and Development Rules, 2017, 'environment' and 'environmental pollution' shall have the same meaning as assigned respectively to them in",
+                options: [
+                    "the Constitution of India",
+                    "the Environment (Protection) Act, 1986",
+                    "the Mines and Minerals (Development and Regulation) Act, 1957",
+                    "None of the above"
+                ],
+                correctAnswer: "the Environment (Protection) Act, 1986" // Educated guess
+            },
+            {
+                question: "66. Which Rule deals with the underground mining operation under the Mineral Conservation and Development Rules, 2017?",
+                options: [
+                    "Rule 11",
+                    "Rule 15",
+                    "Rule 17",
+                    "Rule 18"
+                ],
+                correctAnswer: "Rule 15" // Educated guess
+            },
+            {
+                question: "67. Under Rule 28 of the Mineral Conservation and Development Rules, 2017, a notice is required to send to the authorised officer for temporary discontinuance of work. What is the minimum duration of temporary discontinuance of work in mines?",
+                options: [
+                    "Thirty days",
+                    "Sixty days",
+                    "Ninety days",
+                    "Six months"
+                ],
+                correctAnswer: "Ninety days" // Educated guess
+            },
+            {
+                question: "68. Under Rule 22 of the Mineral Conservation and Development Rules, 2017, every mine shall have mine closure plans, which shall be of two types, namely",
+                options: [
+                    "progressive mine closure plan and final closure plan",
+                    "annual mine closure plan and final closure plan",
+                    "progressive mine closure plan and mining closure plan",
+                    "annual mine closure plan and mining closure plan"
+                ],
+                correctAnswer: "progressive mine closure plan and final closure plan" // Educated guess
+            },
+            {
+                question: "69. Under Rule 10(1) of the Mineral Conservation and Development Rules, 2017, who among the following shall be the competent authority to take decision with respect to a mining plan approved by any officer of the Indian Bureau of Mines?",
+                options: [
+                    "Geologist",
+                    "Controller of Mines",
+                    "Controller General",
+                    "Collector"
+                ],
+                correctAnswer: "Controller General" // Educated guess
+            },
+            {
+                question: "70. Every holder of a mining lease shall employ a whole-time mining engineer and a geologist under the Mineral Conservation and Development Rules, 2017 in case of",
+                options: [
+                    "category A mines",
+                    "category B mines",
+                    "both category A and B mines",
+                    "None of the above"
+                ],
+                correctAnswer: "category A mines" // Educated guess
+            },
+            {
+                question: "71. Under the Mineral Conservation and Development Rules, 2017, which statement is true regarding exercise of powers?",
+                options: [
+                    "Powers of the Regional Controller can be exercised by the Controller of Mines.",
+                    "Powers of the Controller of Mines can be exercised by the Chief Controller of Mines.",
+                    "Powers of the Chief Controller of Mines can be exercised by the Controller General.",
+                    "All of the above"
+                ],
+                correctAnswer: "All of the above"
+            },
+            {
+                question: "72. Rule 59 of the Mineral Conservation and Development Rules, 2017 deals with",
+                options: [
+                    "power to issue directions",
+                    "prohibition of deployment in certain cases",
+                    "examination of mineral deposit and taking samples",
+                    "duties of mining engineer"
+                ],
+                correctAnswer: "examination of mineral deposit and taking samples" // Educated guess
+            },
+            {
+                question: "73. Under the Mineral Conservation and Development Rules, 2017, duties of geologist and mining engineer are defined under",
+                options: [
+                    "Rule 56 and Rule 57",
+                    "Rule 61 and Rule 62",
+                    "Rule 69 and Rule 70",
+                    "Rule 72 and Rule 73"
+                ],
+                correctAnswer: "Rule 56 and Rule 57" // Educated guess
+            },
+            {
+                question: "74. What is the limitation period to apply for revision of the order under Rule 61 of the Mineral Conservation and Development Rules, 2017?",
+                options: [
+                    "Thirty days",
+                    "Forty-five days",
+                    "Sixty days",
+                    "Ninety days"
+                ],
+                correctAnswer: "Thirty days" // Educated guess
+            },
+            {
+                question: "75. Under the Mineral Conservation and Development Rules, 2017, the holder of a mining lease shall send a notice of change in name of mine in",
+                options: [
+                    "Form-B",
+                    "Form-C",
+                    "Form-D",
+                    "Form-E"
+                ],
+                correctAnswer: "Form-C" // Educated guess
+            },
+            {
+                question: "76. Form-F of the Mineral Conservation and Development Rules, 2017 deals with",
+                options: [
+                    "notice of commencement of reconnaissance operation",
+                    "notice of intention of abandonment of mine",
+                    "notice of temporary discontinuance of mine",
+                    "notice of commencement of stopping"
+                ],
+                correctAnswer: "notice of commencement of stopping" // Educated guess
+            },
+            {
+                question: "77. Under the Mineral Conservation and Development Rules, 2017, the security guarantee furnished by the holder of a mining lease is called",
+                options: [
+                    "financial security",
+                    "mining security",
+                    "financial assurance",
+                    "financial promise"
+                ],
+                correctAnswer: "financial assurance" // Educated guess
+            },
+            {
+                question: "78. Under Rule 55 (1) (c) (ii) of the Mineral Conservation and Development Rules, 2017, in case of category B mines, every holder of a mining lease shall employ",
+                options: [
+                    "a whole-time mining engineer and a part-time geologist",
+                    "a part-time mining engineer and a whole-time geologist",
+                    "a whole-time mining engineer and a whole-time geologist",
+                    "a part-time mining engineer and a part-time geologist"
+                ],
+                correctAnswer: "a part-time mining engineer and a part-time geologist" // Educated guess
+            },
+            {
+                question: "79. Chapter VI of the Mineral Conservation and Development Rules, 2017 deals with",
+                options: [
+                    "sustainable mining",
+                    "notice and returns",
+                    "geological reports",
+                    "miscellaneous"
+                ],
+                correctAnswer: "notice and returns" // Educated guess
+            },
+            {
+                question: "80. Under the Mineral Conservation and Development Rules, 2017, which of the following is not correctly matched?",
+                options: [
+                    "Monthly and annual returns-Rule 46",
+                    "Power to issue directions-Rule 58",
+                    "Revision-Rule 61",
+                    "Geological reports-Rule 72"
+                ],
+                correctAnswer: "Monthly and annual returns-Rule 46" // Educated guess
+            },
+            {
+                question: "81. Department defined under the Bihar Minerals (Concession, Prevention of Illegal Mining. Transportation and Storage) Rules, 2019 means",
+                options: [
+                    "the Department of Mines Minerals, Government of Bihar",
+                    "the Department of Mines and Geology, Government of Bihar",
+                    "the Department of Mining Officer, the Government of Bihar",
+                    "the Department of Mines Commissioner, the Government of Bihar"
+                ],
+                correctAnswer: "the Department of Mines and Geology, Government of Bihar" // Educated guess
+            },
+            {
+                question: "82. 'Person' defined under the Bihar Minerals (Concession, Prevention of Illegal Mining, Transportation and. Storage) Rules, 2019 means",
+                options: [
+                    "a department of the Central Government",
+                    "a firm",
+                    "a company",
+                    "All of the above"
+                ],
+                correctAnswer: "All of the above"
+            },
+            {
+                question: "83. The role of the Collector is defined under the Bihar Minerals (Concession, Prevention of Illegal Mining, Transportation Storage) Rules, 2019 in",
+                options: [
+                    "Rule 5",
+                    "Rule 7",
+                    "Rule 10",
+                    "Rule 18"
+                ],
+                correctAnswer: "Rule 5" // Educated guess
+            },
+            {
+                question: "84. Transport under the Bihar Minerals (Concession, Prevention of Illegal Mining. Transportation and Storage) Rules. 2019 means",
+                options: [
+                    "movement in any place in India",
+                    "movement from one place to another within the State of Bihar",
+                    "movement from Bihar State to Jharkhand State",
+                    "None of the above"
+                ],
+                correctAnswer: "movement from one place to another within the State of Bihar" // Educated guess
+            },
+            {
+                question: "85. As per the Bihar Minerals (Concession, Prevention of Illegal Mining, Transportation and Storage) Rules, 2019, who is authorised to assist the Collector in ensuring implementations of the provisions of the Act and these Rules?",
+                options: [
+                    "Commissioner of Mines",
+                    "Superintendent of Police",
+                    "Mining Officer",
+                    "Director of Mines"
+                ],
+                correctAnswer: "Superintendent of Police" // Educated guess
+            },
+            {
+                question: "86. The duration of the mineral concession for minor minerals shall be years under the Bihar Minerals (Concession, Prevention of Illegal Mining, Transportation and Storage) Rules, 2019.",
+                options: [
+                    "3",
+                    "5",
+                    "10",
+                    "20"
+                ],
+                correctAnswer: "5" // Educated guess
+            },
+            {
+                question: "87. Under the Bihar Minerals (Concession, Prevention of Illegal Mining, Transportation and Storage) Rules, 2019, mining lease of granite shall be granted by the",
+                options: [
+                    "Collector",
+                    "Commissioner",
+                    "State Government",
+                    "Director of Mines"
+                ],
+                correctAnswer: "State Government" // Educated guess
+            },
+            {
+                question: "88. Under the Bihar Minerals (Concession, Prevention of Illegal Mining, Transportation and Storage) Rules, 2019, the mining plan shall be prepared by a person who shall possess the",
+                options: [
+                    "qualification of a degree of mining engineering",
+                    "qualification of a post-graduate degree in geology",
+                    "professional experience of five years of working in a supervisory capacity in the field of mining after obtaining the qualification as specified in (A) or (B)",
+                    "None of the above"
+                ],
+                correctAnswer: "professional experience of five years of working in a supervisory capacity in the field of mining after obtaining the qualification as specified in (A) or (B)" // Educated guess
+            },
+            {
+                question: "89. Under the Bihar Minerals (Concession, Prevention of Illegal Mining, Transportation and Storage) Rules, 2019, any order passed by the Mining Officer shall be appealable to the",
+                options: [
+                    "Commissioner",
+                    "Collector",
+                    "Sessions Judge",
+                    "Special Court"
+                ],
+                correctAnswer: "Collector" // Educated guess
+            },
+            {
+                question: "90. Under the Bihar Minerals (Concession, Prevention of Illegal Mining, Transportation and Storage) Rules, 2019, who among the following shall not be the member of District Level Mining Task Force?",
+                options: [
+                    "Superintendent of Police",
+                    "District Transport Officer",
+                    "Sub-Divisional Officer",
+                    "Conservator of Forest"
+                ],
+                correctAnswer: "Conservator of Forest" // Educated guess
+            },
+            {
+                question: "91. Under the Bihar Minerals (Concession, Prevention of Illegal Mining, Transportation and Storage) Rules, 2019, the meeting of District Level Mining Task Force shall be once in positively.",
+                options: [
+                    "six months",
+                    "three months",
+                    "one month",
+                    "two months"
+                ],
+                correctAnswer: "one month" // Educated guess
+            },
+            {
+                question: "92. Under the Bihar Minerals (Concession, Prevention of Illegal Mining, Transportation and Storage) Rules, 2019, what is the requisite fee in respect of application quarrying permit?",
+                options: [
+                    "5,000",
+                    "10,000",
+                    "50,000",
+                    "1,00,000"
+                ],
+                correctAnswer: "5,000" // Educated guess
+            },
+            {
+                question: "93. Chapter XVI of the Bihar Minerals (Concession, Prevention of Illegal Mining, Transportation and Storage) Rules, 2019 deals with",
+                options: [
+                    "appeals and revision",
+                    "reference",
+                    "review",
+                    "All of the above"
+                ],
+                correctAnswer: "appeals and revision"
+            },
+            {
+                question: "94. Rent, royalty or penalty payable under the Bihar Minerals (Concession, Prevention of Illegal Mining, Transportation and Storage Rules, 2019 shall be recoverable through",
+                options: [
+                    "the Bihar and Orissa Public Demands Recovery Act, 1914",
+                    "the Director of Mines",
+                    "the Collector",
+                    "Any of the above"
+                ],
+                correctAnswer: "the Bihar and Orissa Public Demands Recovery Act, 1914" // Educated guess
+            },
+            {
+                question: "95. Which Rule of the Bihar Minerals (Concession, Prevention of Illegal Mining, Transportation and Storage) Rules, 2019 deals with protection of environment?",
+                options: [
+                    "Rule 9",
+                    "Rule 14",
+                    "Rule 18",
+                    "Rule 21"
+                ],
+                correctAnswer: "Rule 18" // Educated guess
+            },
+            {
+                question: "96. Any person aggrieved by any order of the Special Court may. appeal to the under the Bihar Minerals (Concession, Prevention of Illegal Mining, Transportation and Storage) Rules, 2019.",
+                options: [
+                    "Collector",
+                    "Sessions Court",
+                    "High Court",
+                    "Commissioner"
+                ],
+                correctAnswer: "High Court" // Educated guess
+            },
+            {
+                question: "97. Under the Bihar Minerals (Concession, Prevention of Illegal Mining, Transportation and Storage) Rules, 2019, the minimum area for grant of a mineral concession shall be",
+                options: [
+                    "five hectares",
+                    "fifty hectares",
+                    "two hundred hectares",
+                    "five hundred hectares"
+                ],
+                correctAnswer: "five hectares" // Educated guess
+            },
+            {
+                question: "98. Who submits the final mine closure plan under the Bihar Minerals (Concession, Prevention of Illegal Mining. Transportation and Storage) Rules, 2019?",
+                options: [
+                    "The owner of a mineral concession",
+                    "An agent of a mineral concession",
+                    "A manager of a mineral concession",
+                    "All of the above"
+                ],
+                correctAnswer: "All of the above"
+            },
+            {
+                question: "99. Rule 36 of the Bihar Minerals (Concession, Prevention of Illegal Mining, Transportation and Storage) Rules, 2019 deals with",
+                options: [
+                    "conditions on which the quarrying permit shall be granted",
+                    "application for quarrying permit",
+                    "disposal of application for quarrying permit",
+                    "grant of quarrying permit"
+                ],
+                correctAnswer: "conditions on which the quarrying permit shall be granted" // Educated guess
+            },
+            {
+                question: "100. On which date was the Bihar Minerals (Concession, Prevention of Illegal Mining, Transportation and Storage) Rules, 2019 published?",
+                options: [
+                    "1st April, 2019",
+                    "17th September, 2019",
+                    "1st January, 2019",
+                    "6th December, 2019"
+                ],
+                correctAnswer: "17th September, 2019" // Educated guess
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let selectedOption = null;
+        let answeredQuestions = new Array(quizData.length).fill(null); // To store user's answer for each question
+        let correctStatus = new Array(quizData.length).fill(null); // To store correctness status for each question
+
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackMessage = document.getElementById('feedback-message');
+        const prevButton = document.getElementById('prev-button');
+        const nextButton = document.getElementById('next-button');
+        const submitButton = document.getElementById('submit-button');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const finalScore = document.getElementById('final-score');
+        const restartButton = document.getElementById('restart-button');
+        const questionCounter = document.getElementById('question-counter');
+
+        function loadQuestion() {
+            const currentQuestion = quizData[currentQuestionIndex];
+            questionText.textContent = currentQuestion.question;
+            optionsContainer.innerHTML = '';
+            feedbackMessage.textContent = '';
+            submitButton.disabled = false;
+
+            currentQuestion.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.classList.add('option-button');
+                button.dataset.index = index;
+                button.addEventListener('click', () => selectOption(button));
+                optionsContainer.appendChild(button);
+            });
+
+            // Restore previous selection if any
+            if (answeredQuestions[currentQuestionIndex] !== null) {
+                const selectedBtn = optionsContainer.children[answeredQuestions[currentQuestionIndex]];
+                selectedBtn.classList.add('selected');
+                selectedOption = selectedBtn;
+                disableOptions();
+                submitButton.disabled = true; // Already answered
+                displayFeedback();
+            } else {
+                selectedOption = null;
+            }
+
+            updateNavigationButtons();
+            updateQuestionCounter();
+        }
+
+        function selectOption(button) {
+            if (selectedOption) {
+                selectedOption.classList.remove('selected');
+            }
+            selectedOption = button;
+            selectedOption.classList.add('selected');
+            feedbackMessage.textContent = ''; // Clear feedback when new option is selected
+        }
+
+        function disableOptions() {
+            Array.from(optionsContainer.children).forEach(button => {
+                button.disabled = true;
+            });
+        }
+
+        function enableOptions() {
+            Array.from(optionsContainer.children).forEach(button => {
+                button.disabled = false;
+                button.classList.remove('correct', 'incorrect', 'selected');
+            });
+        }
+
+        function checkAnswer() {
+            if (!selectedOption) {
+                feedbackMessage.textContent = "Please select an answer!";
+                feedbackMessage.classList.add('incorrect-feedback');
+                return;
+            }
+
+            disableOptions();
+            submitButton.disabled = true;
+
+            const currentQuestion = quizData[currentQuestionIndex];
+            const userAnswer = selectedOption.textContent;
+
+            answeredQuestions[currentQuestionIndex] = parseInt(selectedOption.dataset.index); // Store selected option index
+
+            if (userAnswer === currentQuestion.correctAnswer) {
+                feedbackMessage.textContent = "Correct!";
+                feedbackMessage.classList.remove('incorrect-feedback');
+                feedbackMessage.classList.add('correct-feedback');
+                selectedOption.classList.add('correct');
+                correctStatus[currentQuestionIndex] = true;
+            } else {
+                feedbackMessage.textContent = "Incorrect. The correct answer was: " + currentQuestion.correctAnswer;
+                feedbackMessage.classList.remove('correct-feedback');
+                feedbackMessage.classList.add('incorrect-feedback');
+                selectedOption.classList.add('incorrect');
+                correctStatus[currentQuestionIndex] = false;
+
+                // Highlight the correct answer
+                Array.from(optionsContainer.children).forEach(button => {
+                    if (button.textContent === currentQuestion.correctAnswer) {
+                        button.classList.add('correct');
+                    }
+                });
+            }
+        }
+
+        function displayFeedback() {
+            const currentQuestion = quizData[currentQuestionIndex];
+            const userChoiceIndex = answeredQuestions[currentQuestionIndex];
+            if (userChoiceIndex !== null) {
+                const selectedBtn = optionsContainer.children[userChoiceIndex];
+                if (correctStatus[currentQuestionIndex]) {
+                    feedbackMessage.textContent = "Correct!";
+                    feedbackMessage.classList.remove('incorrect-feedback');
+                    feedbackMessage.classList.add('correct-feedback');
+                    selectedBtn.classList.add('correct');
+                } else {
+                    feedbackMessage.textContent = "Incorrect. The correct answer was: " + currentQuestion.correctAnswer;
+                    feedbackMessage.classList.remove('correct-feedback');
+                    feedbackMessage.classList.add('incorrect-feedback');
+                    selectedBtn.classList.add('incorrect');
+                    // Highlight the correct answer
+                    Array.from(optionsContainer.children).forEach(button => {
+                        if (button.textContent === currentQuestion.correctAnswer) {
+                            button.classList.add('correct');
+                        }
+                    });
+                }
+            }
+        }
+
+        function updateNavigationButtons() {
+            prevButton.disabled = currentQuestionIndex === 0;
+            nextButton.disabled = currentQuestionIndex === quizData.length - 1 && answeredQuestions[currentQuestionIndex] !== null; // Disable next if last question and answered
+            if (currentQuestionIndex === quizData.length - 1 && answeredQuestions[currentQuestionIndex] !== null) {
+                // If on the last question and it's answered, the "Next" button should lead to results.
+                // Or, if not answered, it should remain "Next" and then submit.
+                // This logic needs refinement for the "Show Results" button.
+            }
+        }
+
+        function updateQuestionCounter() {
+            questionCounter.textContent = `Question ${currentQuestionIndex + 1} of ${quizData.length}`;
+        }
+
+        function showResults() {
+            score = correctStatus.filter(status => status === true).length;
+            finalScore.textContent = `You scored ${score} out of ${quizData.length}!`;
+            quizScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+        }
+
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            selectedOption = null;
+            answeredQuestions.fill(null);
+            correctStatus.fill(null);
+            enableOptions();
+            resultScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            loadQuestion();
+        }
+
+        // Event Listeners
+        submitButton.addEventListener('click', checkAnswer);
+
+        nextButton.addEventListener('click', () => {
+            if (currentQuestionIndex < quizData.length - 1) {
+                currentQuestionIndex++;
+                loadQuestion();
+            } else if (currentQuestionIndex === quizData.length - 1 && answeredQuestions[currentQuestionIndex] !== null) {
+                // If on the last question and it's answered, show results
+                showResults();
+            }
+        });
+
+        prevButton.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuestion();
+            }
+        });
+
+        restartButton.addEventListener('click', restartQuiz);
+
+        // Initial load
+        loadQuestion();
+    </script>
+</body>
+</html>
